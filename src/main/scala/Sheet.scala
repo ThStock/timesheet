@@ -6,11 +6,12 @@ object Sheet extends App {
     //
     )
 
-  days.groupBy(_.day)
+  days.groupBy(_.day).toSeq.sortBy(_._1)
     .map(DayEntry.check)
     .map(DayEntry.daySumWithDetails)
-    .toSeq.reverse.foreach(println)
-  println("Σ: " + DayEntry.sumOf(days))
+    .foreach(println)
+
+  println("Σ: " + DayEntry.formattedSumOf(days))
 
   case class DayEntry(day: String, start: String, end: String, pause: Int, description: String, status:Seq[String] = Nil) {
 
@@ -46,18 +47,20 @@ object Sheet extends App {
 
     def sum(p: Period, de: DayEntry) = p.plus(de.period)
 
-    def daySum(el: (String, Seq[DayEntry])): String = sumOf(el._2)
+    def formattedSumOf(days:Seq[DayEntry]):String = {
+      val timeSum = sumOf(days).toStandardDuration.toPeriod(PeriodType.time)
+      return DayEntry.formatter.print(timeSum)
+    }
 
     def daySumWithDetails(el:(String, Seq[DayEntry])):String = {
       val entries = el._2.sortBy(_.interval.getStartMillis)
       val stats = "\n" + entries.flatMap(_.status)
         .map(" W: " + _  ).toSet.mkString("\n")
-      return entries.mkString("\n") + stats + "\n => Σ: " + daySum(el) + "\n---"
+      return entries.mkString("\n") + stats + "\n => Σ: " + formattedSumOf(el._2) + "\n---"
     }
 
-    def sumOf(days: Seq[DayEntry]): String = {
-      val sum = days.foldLeft(Period.ZERO)(DayEntry.sum).normalizedStandard
-      return DayEntry.formatter.print(sum)
+    private def sumOf(days: Seq[DayEntry]): Period = {
+      return days.foldLeft(Period.ZERO)(DayEntry.sum).normalizedStandard
     }
 
     def check(el: (String, Seq[DayEntry])):(String, Seq[DayEntry]) = {
@@ -76,9 +79,10 @@ object Sheet extends App {
         private def fmt(date:DateTime) = dateFormatter.print(date)
         override def toString = "%s/%s - %s/%s".format(fmt(a.getStart), fmt(a.getEnd), fmt(b.getStart), fmt(b.getEnd))
       }
-
-      val abuts:Seq[Abut] = intervals.sliding(2).map(Abut).toSeq
-      stats = stats ++ abuts.filter(_.abuts).map("not abuting " + _)
+      if (intervals.length > 1) {
+        val abuts:Seq[Abut] = intervals.sliding(2).map(Abut).toSeq
+        stats = stats ++ abuts.filter(_.abuts).map("not abuting " + _)
+      }
       return (el._1, el._2.map(d => DayEntry(d.day, d.start, d.end, d.pause, d.description, stats)))
     }
   }
