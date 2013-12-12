@@ -32,6 +32,8 @@ object Sheet extends App {
       val durFormatted = DayEntry.formatter.print(period)
       return "%s %s to %s p(%2s) %7s => %s".format(day, start, end, pause, durFormatted, description)
     }
+
+    def withStats(stats:Seq[String]) = DayEntry(day, start, end, pause, description, stats)
   }
 
   object DayEntry {
@@ -45,11 +47,13 @@ object Sheet extends App {
       .appendHourOfDay(2).appendLiteral(':').appendMinuteOfHour(2)
       .toFormatter();
 
-    def sum(p: Period, de: DayEntry) = p.plus(de.period)
+    private def sumOf(days: Seq[DayEntry]): Period = {
+      return days.foldLeft(Period.ZERO)((p: Period, de: DayEntry) => p.plus(de.period))
+        .toStandardDuration.toPeriod(PeriodType.time)
+    }
 
     def formattedSumOf(days:Seq[DayEntry]):String = {
-      val timeSum = sumOf(days).toStandardDuration.toPeriod(PeriodType.time)
-      return DayEntry.formatter.print(timeSum)
+      return formatter.print(sumOf(days))
     }
 
     def daySumWithDetails(el:(String, Seq[DayEntry])):String = {
@@ -57,10 +61,6 @@ object Sheet extends App {
       val stats = "\n" + entries.flatMap(_.status)
         .map(" W: " + _  ).toSet.mkString("\n")
       return entries.mkString("\n") + stats + "\n => Σ: " + formattedSumOf(el._2) + "\n---"
-    }
-
-    private def sumOf(days: Seq[DayEntry]): Period = {
-      return days.foldLeft(Period.ZERO)(DayEntry.sum).normalizedStandard
     }
 
     def check(el: (String, Seq[DayEntry])):(String, Seq[DayEntry]) = {
@@ -83,7 +83,7 @@ object Sheet extends App {
         val abuts:Seq[Abut] = intervals.sliding(2).map(Abut).toSeq
         stats = stats ++ abuts.filter(_.abuts).map("not abuting " + _)
       }
-      return (el._1, el._2.map(d => DayEntry(d.day, d.start, d.end, d.pause, d.description, stats)))
+      return (el._1, el._2.map(_.withStats(stats)))
     }
   }
 }
