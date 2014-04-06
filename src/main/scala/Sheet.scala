@@ -63,27 +63,27 @@ object Sheet extends App {
       return entries.mkString("\n") + stats + "\n => Σ: " + formattedSumOf(el._2) + "\n---"
     }
 
-    def check(el: (String, Seq[DayEntry])):(String, Seq[DayEntry]) = {
-      val dayEntries = el._2
+    def check(mapEntry: (String, Seq[DayEntry])):(String, Seq[DayEntry]) = {
+      val dayEntries = mapEntry._2
       var stats:Seq[String] = Seq()
       if (dayEntries.filter(_.pause > 0).size <= 0) {
         stats = stats :+ "add a pause"
       }
 
-      val intervals:Seq[Interval] = el._2.map(_.interval).sortBy(_.getStartMillis)
+      val intervals:Seq[Interval] = mapEntry._2.map(_.interval).sortBy(_.getStartMillis)
 
       case class Abut(s:Seq[Interval]) {
         private val a:Interval = s(0)
         private val b:Interval = s(1)
-        def abuts:Boolean = !a.abuts(b)
+        def abuts:Boolean = a.abuts(b)
         private def fmt(date:DateTime) = dateFormatter.print(date)
         override def toString = "%s/%s - %s/%s".format(fmt(a.getStart), fmt(a.getEnd), fmt(b.getStart), fmt(b.getEnd))
       }
       if (intervals.length > 1) {
-        val abuts:Seq[Abut] = intervals.sliding(2).map(Abut).toSeq
-        stats = stats ++ abuts.filter(_.abuts).map("not abuting " + _)
+        val intervalPairs:Seq[Abut] = intervals.sliding(2).map(Abut).toSeq
+        stats = stats ++ intervalPairs.filterNot(_.abuts).map("not abuting " + _)
       }
-      return (el._1, el._2.map(_.withStats(stats)))
+      return (mapEntry._1, mapEntry._2.map(_.withStats(stats)))
     }
   }
 }
