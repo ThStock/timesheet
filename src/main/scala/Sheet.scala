@@ -1,9 +1,10 @@
-import org.joda.time._
+import org.joda.time.*
+import org.joda.time.format.{DateTimeFormatterBuilder, PeriodFormatter, PeriodFormatterBuilder}
 
 object Sheet extends App {
 
   val days:Seq[DayEntry] = Seq(
-    //
+    DayEntry("2023-01-27", "21:00", "21:15", 0, "update dependecies")
     )
 
   days.groupBy(_.day).toSeq.sortBy(_._1)
@@ -37,7 +38,7 @@ object Sheet extends App {
   }
 
   object DayEntry {
-    import org.joda.time.format._
+
     val formatter: PeriodFormatter = new PeriodFormatterBuilder()
       .appendHours().appendSuffix("h")
       .appendSeparator(" ")
@@ -80,7 +81,7 @@ object Sheet extends App {
         override def toString = "%s/%s - %s/%s".format(fmt(a.getStart), fmt(a.getEnd), fmt(b.getStart), fmt(b.getEnd))
       }
       if (intervals.length > 1) {
-        val intervalPairs:Seq[Abut] = intervals.sliding(2).map(Abut).toSeq
+        val intervalPairs:Seq[Abut] = intervals.sliding(2).map(Abut.apply).toSeq
         stats = stats ++ intervalPairs.filterNot(_.abuts).map("not abuting " + _)
       }
       return (mapEntry._1, mapEntry._2.map(_.withStats(stats)))
