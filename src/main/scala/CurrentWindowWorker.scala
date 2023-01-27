@@ -13,6 +13,7 @@ import java.nio.file.{Files, OpenOption, StandardOpenOption}
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatterBuilder
 import java.time.temporal.{ChronoField, TemporalField}
+import java.util.stream.Collectors
 import scala.jdk.CollectionConverters.*
 
 object CurrentWindowWorker {
@@ -60,7 +61,7 @@ object CurrentWindowWorker {
 
       .toFormatter.format(ZonedDateTime.now())
     val path = new File(new File(home), nowName).toPath.toAbsolutePath
-    Files.write(path, o.lines().toList, StandardCharsets.UTF_8, options: _*)
+    Files.write(path, o.lines().collect(Collectors.toList), StandardCharsets.UTF_8, options: _*)
   }
 
   def date(): String = {
