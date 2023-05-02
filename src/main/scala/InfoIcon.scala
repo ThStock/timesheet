@@ -1,6 +1,7 @@
 package timesheet
 
 import java.awt.TrayIcon.MessageType
+import java.awt.event.{MouseAdapter, MouseEvent, MouseListener}
 import java.awt.image.BufferedImage
 import java.awt.{Color, Image, SystemTray, Toolkit, TrayIcon}
 
@@ -22,6 +23,11 @@ class InfoIcon {
     val tray = SystemTray.getSystemTray()
 
     trayIcon = new TrayIcon(black, "Timesheet")
+    trayIcon.addMouseListener(new MouseAdapter {
+      override def mouseClicked(e: MouseEvent): Unit = {
+        System.exit(1)
+      }
+    })
     tray.add(trayIcon)
   }
 

@@ -15,7 +15,7 @@ lazy val root = (project in file("."))
       case x => MergeStrategy.first
     },
     assembly / logLevel := Level.Warn,
-    assembly / mainClass := Some("CurrentWindowWorker"),
+    assembly / mainClass := Some("timesheet.CurrentWindowWorker"),
     assembly / assemblyJarName := "../timesheet.jar",
     publish / skip := true,
   )

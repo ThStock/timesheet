@@ -9,6 +9,7 @@ import org.yaml.snakeyaml.{DumperOptions, Yaml}
 
 import java.io.File
 import java.lang.annotation.Native
+import java.nio.channels.FileChannel
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, OpenOption, StandardOpenOption}
 import java.time.ZonedDateTime
@@ -19,6 +20,7 @@ import scala.jdk.CollectionConverters.*
 
 object CurrentWindowWorker {
   def main(args: Array[String]): Unit = {
+    checkRunning()
     var latest: (String, String) = ("", "")
     var n = now()
     val options = new DumperOptions()
@@ -48,6 +50,19 @@ object CurrentWindowWorker {
         icon.signalWrite()
       }
       Thread.sleep(100)
+    }
+  }
+
+  private def checkRunning(): Unit = {
+    val home = System.getProperty("user.home")
+    val lockFile = new File(home, "timesheet.lock")
+    val fc = FileChannel.open(lockFile.toPath(),
+      StandardOpenOption.CREATE,
+      StandardOpenOption.WRITE)
+    val lock = fc.tryLock()
+    if (lock == null) {
+      System.out.println("another instance is running")
+      System.exit(2)
     }
   }
 
