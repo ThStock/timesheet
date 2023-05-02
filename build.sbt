@@ -9,7 +9,6 @@ lazy val root = (project in file("."))
     libraryDependencies += "net.java.dev.jna" % "jna" % "5.13.0",
     libraryDependencies += "net.java.dev.jna" % "jna-platform" % "5.13.0",
     libraryDependencies += "joda-time" % "joda-time" % "2.12.2",
-    libraryDependencies += "org.yaml" % "snakeyaml" % "1.33"
-
+    libraryDependencies += "org.yaml" % "snakeyaml" % "1.33",
   )
 

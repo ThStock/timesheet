@@ -4,6 +4,7 @@ import com.sun.jna
 import com.sun.jna.{Native, Pointer}
 import com.sun.jna.platform.win32.WinDef.HWND
 import com.sun.jna.ptr.PointerByReference
+import org.yaml.snakeyaml.DumperOptions.ScalarStyle
 import org.yaml.snakeyaml.{DumperOptions, Yaml}
 
 import java.io.File
@@ -17,31 +18,34 @@ import java.util.stream.Collectors
 import scala.jdk.CollectionConverters.*
 
 object CurrentWindowWorker {
-
   def main(args: Array[String]): Unit = {
-    var latest = ""
+    var latest: (String, String) = ("", "")
+    var n = now()
     val options = new DumperOptions()
     options.setWidth(1024)
     options.setExplicitEnd(true)
+    options.setDefaultScalarStyle(ScalarStyle.DOUBLE_QUOTED)
+
     val yaml = new Yaml(options)
+    val icon = InfoIcon.create()
     while (true) {
       val cTitle = JnaUtil.getActiveWindowTitle()
       val currentProcess = JnaUtil.getActiveWindowProcess()
-      val data = Map(
-        "date" -> date(),
-        "title" -> cTitle,
-        "process" -> currentProcess
-      )
-      if (cTitle.isBlank && currentProcess == "Explorer.EXE") {
-        // do nothing
-      } else if (cTitle == "Task Switching" && currentProcess == "Explorer.EXE") {
-        // do nothing
-      } else if (latest != cTitle + currentProcess) {
-
+      if (latest != ((cTitle, currentProcess))) {
+        val newN = now()
+        val previous = java.time.Duration.between(n, newN)
+        n = newN
+        val data = Map(
+          "date" -> format(n),
+          "title" -> cTitle,
+          "process" -> currentProcess,
+          "previous-duration/" + latest._2 -> previous.toString,
+        )
         val o = yaml.dump(data.asJava).trim
-        latest = cTitle + currentProcess
+        latest = (cTitle, currentProcess)
         println(o)
         write(o)
+        icon.signalWrite()
       }
       Thread.sleep(100)
     }
@@ -64,7 +68,11 @@ object CurrentWindowWorker {
     Files.write(path, o.lines().collect(Collectors.toList), StandardCharsets.UTF_8, options: _*)
   }
 
-  def date(): String = {
-    ZonedDateTime.now().withNano(0).withFixedOffsetZone().toString
+  def format(now: ZonedDateTime): String = {
+    now.toString
+  }
+
+  private def now(): ZonedDateTime = {
+    ZonedDateTime.now().withNano(0).withFixedOffsetZone()
   }
 }
