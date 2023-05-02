@@ -10,5 +10,13 @@ lazy val root = (project in file("."))
     libraryDependencies += "net.java.dev.jna" % "jna-platform" % "5.13.0",
     libraryDependencies += "joda-time" % "joda-time" % "2.12.2",
     libraryDependencies += "org.yaml" % "snakeyaml" % "1.33",
+    assemblyMergeStrategy := {
+      case PathList("META-INF", _@_*) => MergeStrategy.discard
+      case x => MergeStrategy.first
+    },
+    assembly / logLevel := Level.Warn,
+    assembly / mainClass := Some("CurrentWindowWorker"),
+    assembly / assemblyJarName := "../timesheet.jar",
+    publish / skip := true,
   )
 
